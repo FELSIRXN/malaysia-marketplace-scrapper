@@ -292,6 +292,8 @@ Check `logs/scraper.log` for detailed error information:
 tail -f logs/scraper.log
 ```
 
+**Note**: Log files are automatically excluded from git tracking to prevent large file issues. The `logs/` directory and `*.log` files are in `.gitignore`.
+
 ## 🤝 Contributing
 
 1. Fork the repository
