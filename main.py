@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Main entry point for the Multi-Platform E-commerce Scraper.
-Clean, professional interface for Indonesian market analysis.
+Clean, professional interface for Malaysian market analysis.
+Focused on finding best-selling affordable items.
 """
 
 import os
@@ -27,16 +28,17 @@ def display_banner():
     """Display application banner."""
     print("=" * 60)
     print("  MULTI-PLATFORM E-COMMERCE SCRAPER")
-    print("  Indonesian Market Analysis Tool")
+    print("  Malaysian Market - Best Seller Analyzer")
+    print("  Find Top 50 Best-Selling Items Under RM 50")
     print("=" * 60)
     print()
 
 
 def display_supported_platforms():
     """Display supported platforms."""
-    print("Platform yang didukung:")
+    print("Supported platforms:")
     for platform, config in SUPPORTED_PLATFORMS.items():
-        status = "✓ Aktif" if config['enabled'] else "✗ Nonaktif"
+        status = "✓ Active" if config['enabled'] else "✗ Disabled"
         print(f"  • {config['name']} ({platform}) - {status}")
     print()
 
@@ -82,11 +84,11 @@ def search_products_interactive():
             elif choice == "2":
                 results = scraper.search_specific_platforms(keyword, ['shopee'], limit)
             elif choice == "3":
-                results = scraper.search_specific_platforms(keyword, ['tokopedia'], limit)
-            elif choice == "4":
                 results = scraper.search_specific_platforms(keyword, ['lazada'], limit)
+            elif choice == "4":
+                results = scraper.search_specific_platforms(keyword, ['mudah'], limit)
             elif choice == "5":
-                platforms = input("Masukkan platform (shopee,tokopedia,lazada): ").split(',')
+                platforms = input("Enter platforms (shopee,lazada,mudah): ").split(',')
                 platforms = [p.strip() for p in platforms]
                 results = scraper.search_specific_platforms(keyword, platforms, limit)
             else:
@@ -141,7 +143,7 @@ def display_search_results(results: Dict[str, List[Dict]]):
                 if count >= 5:  # Limit total samples
                     break
                 print(f"  • {product.get('name', 'N/A')[:50]}...")
-                print(f"    Platform: {platform} | Harga: Rp {product.get('price', 0):,.0f}")
+                print(f"    Platform: {platform} | Price: RM {product.get('price', 0):,.2f} | Sold: {product.get('sold', 0)}")
                 count += 1
             if count >= 5:
                 break
@@ -180,24 +182,24 @@ def perform_analysis(results: Dict, keyword: str, scraper: MultiPlatformScraper)
         # Price analysis
         if 'price_analysis' in analysis:
             price_data = analysis['price_analysis']
-            print(f"\nAnalisis Harga:")
-            print(f"  Rata-rata: Rp {price_data.get('average_price', 0):,.0f}")
-            print(f"  Terendah: Rp {price_data.get('min_price', 0):,.0f}")
-            print(f"  Tertinggi: Rp {price_data.get('max_price', 0):,.0f}")
+            print(f"\nPrice Analysis:")
+            print(f"  Average: RM {price_data.get('average_price', 0):,.2f}")
+            print(f"  Lowest: RM {price_data.get('min_price', 0):,.2f}")
+            print(f"  Highest: RM {price_data.get('max_price', 0):,.2f}")
         
         # Rating analysis
         if 'rating_analysis' in analysis:
             rating_data = analysis['rating_analysis']
-            print(f"\nAnalisis Rating:")
-            print(f"  Rata-rata: {rating_data.get('average_rating', 0):.1f}/5.0")
-            print(f"  Produk rating tinggi (>4.0): {rating_data.get('high_rated_count', 0)}")
+            print(f"\nRating Analysis:")
+            print(f"  Average: {rating_data.get('average_rating', 0):.1f}/5.0")
+            print(f"  High rated products (>4.0): {rating_data.get('high_rated_count', 0)}")
         
         # Platform comparison
         if platform_comparison and 'platform_metrics' in platform_comparison:
-            print(f"\nPerbandingan Platform:")
+            print(f"\nPlatform Comparison:")
             for platform, metrics in platform_comparison['platform_metrics'].items():
                 platform_name = SUPPORTED_PLATFORMS.get(platform, {}).get('name', platform)
-                print(f"  {platform_name}: Skor {metrics.get('score', 0):.1f}/100")
+                print(f"  {platform_name}: Score {metrics.get('score', 0):.1f}/100")
         
     except Exception as e:
         logger.error(f"Analysis failed: {str(e)}")
@@ -241,6 +243,104 @@ def export_results(results: Dict, keyword: str, scraper: MultiPlatformScraper):
         print(f"Ekspor gagal: {str(e)}")
 
 
+def analyze_bestsellers(keyword: str, max_price: float, top_n: int, platforms: List[str], limit: int):
+    """Analyze and display best-selling affordable items."""
+    logger = get_logger(__name__)
+    scraper = MultiPlatformScraper()
+    analyzer = AdvancedAnalyzer()
+    
+    print(f"\n{'='*60}")
+    print(f"  BEST-SELLER ANALYSIS: '{keyword}'"  )
+    print(f"  Max Price: RM{max_price} | Top {top_n} Items")
+    print(f"{'='*60}\n")
+    
+    # Search across platforms
+    print(MESSAGES['search_started'])
+    if platforms:
+        results = scraper.search_specific_platforms(keyword, platforms, limit)
+    else:
+        results = scraper.search_all_platforms(keyword, limit)
+    
+    # Combine all products
+    all_products = []
+    for platform, products in results.items():
+        for product in products:
+            product['platform'] = platform
+            all_products.append(product)
+    
+    if not all_products:
+        print(MESSAGES['no_results'])
+        return None
+    
+    print(f"Found {len(all_products)} total products. Analyzing...\n")
+    
+    # Perform best-seller analysis
+    analysis = analyzer.analyze_affordable_bestsellers(all_products, max_price=max_price, top_n=top_n)
+    
+    if 'error' in analysis:
+        print(f"Error: {analysis['error']}")
+        return None
+    
+    # Display results
+    print(f"{MESSAGES['analysis_completed']}\n")
+    
+    # Summary
+    summary = analysis['summary']
+    print(f"SUMMARY:")
+    print(f"-" * 40)
+    print(f"Total affordable products found: {summary['total_affordable_products']}")
+    print(f"Top sellers analyzed: {summary['top_sellers_count']}")
+    print(f"Price threshold: RM{summary['price_threshold']}")
+    
+    # Top 10 Products
+    print(f"\nTOP 10 BEST-SELLING ITEMS UNDER RM{max_price}:")
+    print(f"=" * 80)
+    for i, product in enumerate(analysis['top_products'], 1):
+        print(f"{i}. {product.get('name', 'N/A')[:60]}")
+        print(f"   Price: RM{product.get('price', 0):.2f} | "
+              f"Sold: {product.get('sold', 0):,} | "
+              f"Rating: {product.get('rating', 0):.1f}/5.0 | "
+              f"Platform: {product.get('platform', 'N/A')}")
+    
+    # Price metrics
+    if 'price_metrics' in analysis:
+        price = analysis['price_metrics']
+        print(f"\nPRICE METRICS:")
+        print(f"-" * 40)
+        print(f"Average price: RM{price.get('average_price', 0):.2f}")
+        print(f"Price range: RM{price.get('min_price', 0):.2f} - RM{price.get('max_price', 0):.2f}")
+    
+    # Sales metrics
+    if 'sales_metrics' in analysis:
+        sales = analysis['sales_metrics']
+        print(f"\nSALES METRICS:")
+        print(f"-" * 40)
+        print(f"Total sales volume: {sales.get('total_sales', 0):,} units")
+        print(f"Average sales per item: {sales.get('average_sales', 0):.0f} units")
+        print(f"Bestseller threshold: {sales.get('bestseller_threshold', 0):.0f} units")
+    
+    # Category insights
+    if 'category_insights' in analysis:
+        cat_insights = analysis['category_insights']
+        print(f"\nTOP CATEGORIES:")
+        print(f"-" * 40)
+        for category, stats in sorted(cat_insights['category_stats'].items(), 
+                                      key=lambda x: x[1]['total_sales'], reverse=True)[:5]:
+            print(f"{category.title()}: {stats['product_count']} items, "
+                  f"{stats['total_sales']:,} total sales, "
+                  f"RM{stats['avg_price']:.2f} avg price")
+    
+    # Recommendations
+    if 'recommendations' in analysis:
+        print(f"\nRECOMMENDATIONS:")
+        print(f"-" * 40)
+        for rec in analysis['recommendations']:
+            print(f"• {rec}")
+    
+    return analysis
+
+
+
 def main():
     """Main application entry point."""
     # Setup
@@ -252,11 +352,17 @@ def main():
     parser = argparse.ArgumentParser(description='Multi-Platform E-commerce Scraper')
     parser.add_argument('--keyword', '-k', help='Search keyword')
     parser.add_argument('--platforms', '-p', help='Comma-separated platform names')
-    parser.add_argument('--limit', '-l', type=int, default=20, help='Results per platform')
+    parser.add_argument('--limit', '-l', type=int, default=100, help='Results per platform (default: 100)')
     parser.add_argument('--export', '-e', choices=['json', 'csv', 'txt'], help='Export format')
     parser.add_argument('--output', '-o', help='Output filename')
     parser.add_argument('--interactive', '-i', action='store_true', help='Interactive mode')
-    parser.add_argument('--version', '-v', action='version', version='Multi-Platform Scraper v2.0')
+    parser.add_argument('--max-price', type=float, default=50, help='Maximum price filter (default: RM 50)')
+    parser.add_argument('--sort-by', choices=['sales', 'price', 'rating'], default='sales', 
+                       help='Sort by: sales, price, or rating (default: sales)')
+    parser.add_argument('--top-n', type=int, default=50, help='Number of top items to return (default: 50)')
+    parser.add_argument('--bestsellers', '-b', action='store_true', 
+                       help='Best seller analysis mode (find top affordable items)')
+    parser.add_argument('--version', '-v', action='version', version='Multi-Platform Scraper v3.0 (Malaysian Edition)')
     
     args = parser.parse_args()
     
@@ -271,8 +377,30 @@ def main():
         if args.interactive or not args.keyword:
             # Interactive mode
             search_products_interactive()
+        elif args.bestsellers:
+            # Best-seller analysis mode
+            platforms = None
+            if args.platforms:
+                platforms = [p.strip() for p in args.platforms.split(',')]
+            
+            analysis = analyze_bestsellers(
+                keyword=args.keyword,
+                max_price=args.max_price,
+                top_n=args.top_n,
+                platforms=platforms,
+                limit=args.limit
+            )
+            
+            # Export if requested
+            if analysis and args.export:
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                filename = args.output or f"bestsellers_{args.keyword.replace(' ', '_')}_{timestamp}.{args.export}"
+                
+                scraper = MultiPlatformScraper()
+                scraper.export_results(analysis, args.export, filename)
+                print(f"\nResults exported to: {filename}")
         else:
-            # Command line mode
+            # Command line mode (standard search)
             scraper = MultiPlatformScraper()
             
             if args.platforms:
@@ -280,7 +408,7 @@ def main():
                 results = scraper.search_specific_platforms(args.keyword, platforms, args.limit)
             else:
                 results = scraper.search_all_platforms(args.keyword, args.limit)
-            
+           
             # Display results
             display_search_results(results)
             

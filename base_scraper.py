@@ -23,11 +23,11 @@ class BaseEcommerceScraper(ABC):
         # Use random user agent from config
         user_agent = random.choice(USER_AGENTS)
         
-        # Common headers with Indonesian region priority
+        # Common headers with Malaysian region priority
         self.session.headers.update({
             'User-Agent': user_agent,
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Accept-Language': 'ms-MY,ms;q=0.9,en-MY;q=0.8,en;q=0.7',
             'Accept-Encoding': 'gzip, deflate, br',
             'Connection': 'keep-alive',
         })
@@ -128,20 +128,20 @@ class BaseEcommerceScraper(ABC):
             return False
     
     def normalize_price(self, price_text: str) -> float:
-        """Extract and normalize price from text (Indonesian Rupiah focus)."""
+        """Extract and normalize price from text (Malaysian Ringgit MYR focus)."""
         if not price_text:
             return 0.0
         
         # Remove currency symbols and normalize
-        price_text = str(price_text).replace('Rp', '').replace('$', '').replace(',', '').replace('.', '')
+        price_text = str(price_text).replace('RM', '').replace('MYR', '').replace('$', '').replace(',', '').replace('.', '')
         
         # Extract numeric value
         price_match = re.search(r'(\d+)', price_text.replace('.', '').replace(',', ''))
         if price_match:
             price = int(price_match.group(1))
-            # Convert to standard format (assuming Indonesian Rupiah)
-            if price > 100000:  # If price seems to be in smallest unit
-                return price / 1000  # Convert to thousands
+            # Convert to standard format (assuming Malaysian Ringgit)
+            if price > 10000:  # If price seems to be in smallest unit (sen)
+                return price / 100  # Convert to ringgit
             return price
         return 0.0
     
@@ -163,10 +163,10 @@ class BaseEcommerceScraper(ABC):
         
         sold_text = str(sold_text).lower()
         
-        # Handle Indonesian terms
-        if 'rb' in sold_text or 'ribu' in sold_text:
+        # Handle Malaysian/English terms
+        if 'rb' in sold_text or 'ribu' in sold_text or 'k' in sold_text:
             multiplier = 1000
-        elif 'jt' in sold_text or 'juta' in sold_text:
+        elif 'jt' in sold_text or 'juta' in sold_text or 'm' in sold_text:
             multiplier = 1000000
         else:
             multiplier = 1

@@ -5,20 +5,20 @@ from urllib.parse import quote
 from bs4 import BeautifulSoup
 
 class LazadaScraper(BaseEcommerceScraper):
-    """Lazada scraper implementation"""
+    """Lazada Malaysia scraper implementation"""
     
-    def __init__(self, country='id'):
+    def __init__(self, country='my'):
         super().__init__(country)
         self.platform = 'lazada'
         
-        # Lazada specific headers
+        # Lazada specific headers for Malaysian region
         self.session.headers.update({
-            'Referer': f'https://www.lazada.co.{country}/',
+            'Referer': f'https://www.lazada.com.{country}/',
             'X-Requested-With': 'XMLHttpRequest',
         })
     
     def get_base_url(self):
-        return f"https://www.lazada.co.{self.country}"
+        return f"https://www.lazada.com.{self.country}"
     
     def search_products(self, keyword, limit=50):
         """Search for products on Lazada"""
@@ -157,17 +157,17 @@ class LazadaScraper(BaseEcommerceScraper):
             products.append({
                 'platform': 'lazada',
                 'name': f"{sample_names[i % len(sample_names)]} - Edition {i+1}",
-                'price': random.randint(80, 800) * 1000,  # IDR
-                'original_price': random.randint(100, 1000) * 1000,
+                'price': random.randint(20, 200),  # MYR
+                'original_price': random.randint(25, 250),
                 'discount': f"{random.randint(15, 35)}%",
                 'sold': random.randint(100, 3000),
                 'rating': round(random.uniform(4.0, 5.0), 1),
                 'rating_count': random.randint(20, 800),
                 'shopid': f"lazada_store_{i+1000}",
                 'itemid': f"lazada_item_{i+5000}",
-                'shop_location': random.choice(['Jakarta', 'Surabaya', 'Bandung', 'Medan', 'Denpasar']),
+                'shop_location': random.choice(['Kuala Lumpur', 'Selangor', 'Penang', 'Johor Bahru', 'Ipoh']),
                 'brand': 'Lazada Brand',
-                'currency': 'IDR',
+                'currency': 'MYR',
                 'image_url': '',
                 'product_url': f"{self.get_base_url()}/products/product-{i+5000}.html"
             })
@@ -180,7 +180,7 @@ class LazadaScraper(BaseEcommerceScraper):
             'platform': 'lazada',
             'shop_id': shop_id,
             'name': f'Lazada Official {shop_id.title()}',
-            'description': 'Toko resmi Lazada dengan jaminan produk original dan layanan terbaik',
+            'description': 'Official Lazada store with guaranteed authentic products',
             'follower_count': random.randint(3000, 100000),
             'response_rate': random.randint(92, 100),
             'response_time': random.randint(1, 4),
@@ -188,7 +188,7 @@ class LazadaScraper(BaseEcommerceScraper):
             'rating_normal': round(random.uniform(3.5, 4.3), 1),
             'rating_bad': round(random.uniform(2.0, 3.2), 1),
             'item_count': random.randint(200, 2000),
-            'location': random.choice(['Jakarta', 'Surabaya', 'Bandung', 'Medan']),
+            'location': random.choice(['Kuala Lumpur', 'Selangor', 'Penang', 'Johor Bahru']),
             'is_official_shop': True,
             'is_verified': True,
             'shop_url': f"{self.get_base_url()}/shop/{shop_id}"

@@ -1,45 +1,60 @@
 """
 Configuration and constants for the multi-platform e-commerce scraper.
 Centralized location for all configuration values, supported platforms, and user-facing strings.
+Targets Malaysian marketplaces for best-selling item analysis.
 """
 
 import os
 from typing import Dict, List, Any
 
-# Platform Configuration
+# Platform Configuration - Malaysian Marketplaces
 SUPPORTED_PLATFORMS = {
     'shopee': {
-        'name': 'Shopee',
-        'base_url': 'https://shopee.co.id',
+        'name': 'Shopee Malaysia',
+        'base_url': 'https://shopee.com.my',
         'search_endpoint': '/api/v4/search/search_items',
         'enabled': True,
-        'region': 'id'  # Indonesian region priority
-    },
-    'tokopedia': {
-        'name': 'Tokopedia', 
-        'base_url': 'https://www.tokopedia.com',
-        'search_endpoint': '/search',
-        'enabled': True,
-        'region': 'id'
+        'region': 'my',  # Malaysian region
+        'currency': 'MYR'
     },
     'lazada': {
-        'name': 'Lazada',
-        'base_url': 'https://www.lazada.co.id',
+        'name': 'Lazada Malaysia',
+        'base_url': 'https://www.lazada.com.my',
         'search_endpoint': '/catalog',
         'enabled': True,
-        'region': 'id'
+        'region': 'my',
+        'currency': 'MYR'
+    },
+    'mudah': {
+        'name': 'Mudah.my',
+        'base_url': 'https://www.mudah.my',
+        'search_endpoint': '/search',
+        'enabled': True,
+        'region': 'my',
+        'currency': 'MYR'
+    },
+    'facebook_marketplace': {
+        'name': 'Facebook Marketplace',
+        'base_url': 'https://www.facebook.com/marketplace',
+        'search_endpoint': '/search',
+        'enabled': False,  # Requires authentication/browser automation
+        'region': 'my',
+        'currency': 'MYR'
     }
 }
 
 # Default Configuration
 DEFAULT_CONFIG = {
-    'country': 'id',  # Indonesian region priority
-    'max_results_per_platform': 50,
+    'country': 'my',  # Malaysian region
+    'currency': 'MYR',  # Malaysian Ringgit
+    'max_results_per_platform': 100,  # Increased to find more best-sellers
     'request_timeout': 30,
     'retry_attempts': 3,
     'delay_between_requests': 1.0,
     'concurrent_requests': 5,
-    'output_format': 'json'
+    'output_format': 'json',
+    'max_price_filter': 50,  # Default max price for affordable items (RM 50)
+    'top_n_items': 50  # Number of top items to return
 }
 
 # User Agent Strings
@@ -57,18 +72,21 @@ OUTPUT_DIRS = {
     'exports': 'exports'
 }
 
-# User-Facing Messages (Indonesian/English)
+# User-Facing Messages (English/Malay)
 MESSAGES = {
-    'search_started': 'Memulai pencarian produk...',
-    'search_completed': 'Pencarian selesai',
-    'analysis_started': 'Memulai analisis data...',
-    'analysis_completed': 'Analisis selesai',
-    'export_started': 'Mengekspor data...',
-    'export_completed': 'Data berhasil diekspor',
-    'error_occurred': 'Terjadi kesalahan',
-    'no_results': 'Tidak ada hasil ditemukan',
-    'platform_unavailable': 'Platform tidak tersedia',
-    'invalid_input': 'Input tidak valid'
+    'search_started': 'Starting product search...',
+    'search_completed': 'Search completed',
+    'analysis_started': 'Starting data analysis...',
+    'analysis_completed': 'Analysis completed',
+    'export_started': 'Exporting data...',
+    'export_completed': 'Data exported successfully',
+    'error_occurred': 'An error occurred',
+    'no_results': 'No results found',
+    'platform_unavailable': 'Platform unavailable',
+    'invalid_input': 'Invalid input',
+    'filtering_by_price': 'Filtering products by price...',
+    'ranking_by_sales': 'Ranking by sales volume...',
+    'top_sellers_found': 'Top sellers identified'
 }
 
 # Logging Configuration
@@ -109,22 +127,32 @@ LOGGING_CONFIG = {
 # Analysis Categories
 ANALYSIS_CATEGORIES = {
     'price_analysis': {
-        'name': 'Analisis Harga',
+        'name': 'Price Analysis',
         'metrics': ['avg_price', 'min_price', 'max_price', 'price_range', 'price_distribution']
     },
     'rating_analysis': {
-        'name': 'Analisis Rating',
+        'name': 'Rating Analysis',
         'metrics': ['avg_rating', 'rating_distribution', 'high_rated_products']
     },
     'merchant_analysis': {
-        'name': 'Analisis Merchant',
+        'name': 'Merchant Analysis',
         'metrics': ['merchant_performance', 'top_merchants', 'merchant_comparison']
     },
     'product_analysis': {
-        'name': 'Analisis Produk',
+        'name': 'Product Analysis',
         'metrics': ['top_products', 'product_categories', 'trending_products']
+    },
+    'bestseller_analysis': {
+        'name': 'Best Seller Analysis',
+        'metrics': ['top_selling_items', 'sales_volume', 'price_to_sales_ratio', 'affordable_bestsellers']
     }
 }
+
+# Malaysian Cities for location context
+MALAYSIAN_CITIES = [
+    'Kuala Lumpur', 'Selangor', 'Penang', 'Johor Bahru', 'Ipoh',
+    'Melaka', 'Kuching', 'Kota Kinabalu', 'Petaling Jaya', 'Shah Alam'
+]
 
 # Export Formats
 EXPORT_FORMATS = {

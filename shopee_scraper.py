@@ -7,7 +7,7 @@ from logger import log_search_start, log_search_complete, log_search_error
 class ShopeeScraper(BaseEcommerceScraper):
     """
     Shopee scraper implementation with clean architecture.
-    Optimized for Indonesian market (shopee.co.id).
+    Optimized for Malaysian market (shopee.com.my).
     """
     
     def __init__(self, country: str = None):
@@ -15,7 +15,7 @@ class ShopeeScraper(BaseEcommerceScraper):
         self.platform = 'shopee'
         self.platform_config = get_platform_config('shopee')
         
-        # Shopee specific headers for Indonesian region
+        # Shopee specific headers for Malaysian region
         self.session.headers.update({
             'Accept': 'application/json, text/plain, */*',
             'Referer': self.platform_config['base_url'],
@@ -133,7 +133,7 @@ class ShopeeScraper(BaseEcommerceScraper):
             'item_id': item_basic.get('itemid', ''),
             'shop_location': self.clean_text(item_basic.get('shop_location', '')),
             'brand': self.clean_text(item_basic.get('brand', '')),
-            'currency': 'IDR',  # Indonesian Rupiah
+            'currency': 'MYR',  # Malaysian Ringgit
             'image_url': self._build_image_url(item_basic.get('image', '')),
             'product_url': self._build_product_url(item_basic.get('shopid', ''), item_basic.get('itemid', '')),
             'platform': self.platform
@@ -145,7 +145,7 @@ class ShopeeScraper(BaseEcommerceScraper):
         """Build complete image URL from hash."""
         if not image_hash:
             return ''
-        return f"https://cf.shopee.co.id/file/{image_hash}"
+        return f"https://cf.shopee.com.my/file/{image_hash}"
     
     def _build_product_url(self, shop_id: str, item_id: str) -> str:
         """Build complete product URL."""

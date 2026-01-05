@@ -1,6 +1,7 @@
 from shopee_scraper import ShopeeScraper
-from tokopedia_scraper import TokopediaScraper
 from lazada_scraper import LazadaScraper
+from mudah_scraper import MudahScraper
+from facebook_marketplace_scraper import FacebookMarketplaceScraper
 from advanced_analyzer import AdvancedAnalyzer
 from config import get_enabled_platforms, get_platform_config, get_config, MESSAGES
 from logger import get_logger, log_search_start, log_search_complete, log_search_error
@@ -9,9 +10,9 @@ from typing import Dict, List, Any, Optional
 
 class MultiPlatformScraper:
     """
-    Unified scraper for multiple Indonesian e-commerce platforms.
+    Unified scraper for multiple Malaysian e-commerce platforms.
     Clean architecture with centralized configuration and professional logging.
-    Supports: Shopee, Tokopedia, Lazada
+    Supports: Shopee Malaysia, Lazada Malaysia, Mudah.my, Facebook Marketplace
     """
     
     def __init__(self, country: str = None):
@@ -19,7 +20,7 @@ class MultiPlatformScraper:
         Initialize multi-platform scraper with clean architecture.
         
         Args:
-            country (str): Country code (default from config, 'id' for Indonesia)
+            country (str): Country code (default from config, 'my' for Malaysia)
         """
         self.config = get_config()
         self.country = country or self.config['country']
@@ -33,10 +34,12 @@ class MultiPlatformScraper:
             try:
                 if platform_name == 'shopee':
                     self.platforms[platform_name] = ShopeeScraper(self.country)
-                elif platform_name == 'tokopedia':
-                    self.platforms[platform_name] = TokopediaScraper(self.country)
                 elif platform_name == 'lazada':
                     self.platforms[platform_name] = LazadaScraper(self.country)
+                elif platform_name == 'mudah':
+                    self.platforms[platform_name] = MudahScraper(self.country)
+                elif platform_name == 'facebook_marketplace':
+                    self.platforms[platform_name] = FacebookMarketplaceScraper(self.country)
             except Exception as e:
                 self.logger.error(f"Failed to initialize {platform_name} scraper: {str(e)}")
         
@@ -295,11 +298,11 @@ class MultiPlatformScraper:
             if 'price_analysis' in analysis:
                 price_data = analysis['price_analysis']
                 recommendations.append(
-                    f"Rata-rata harga: Rp {price_data.get('average_price', 0):,.0f}"
+                    f"Average price: RM {price_data.get('average_price', 0):,.2f}"
                 )
                 recommendations.append(
-                    f"Rentang harga optimal: Rp {price_data.get('min_price', 0):,.0f} - "
-                    f"Rp {price_data.get('max_price', 0):,.0f}"
+                    f"Optimal price range: RM {price_data.get('min_price', 0):,.2f} - "
+                    f"RM {price_data.get('max_price', 0):,.2f}"
                 )
             
             # Platform recommendations
@@ -309,7 +312,7 @@ class MultiPlatformScraper:
                                   key=lambda x: platform_data['platform_metrics'][x].get('score', 0),
                                   default='')
                 if best_platform:
-                    recommendations.append(f"Platform terbaik untuk kategori ini: {best_platform}")
+                    recommendations.append(f"Best platform for this category: {best_platform}")
         
         return recommendations
     
@@ -381,7 +384,7 @@ class MultiPlatformScraper:
     def _export_txt(self, data: Dict, filename: str) -> bool:
         """Export data to human-readable text format."""
         with open(filename, 'w', encoding='utf-8') as f:
-            f.write("LAPORAN ANALISIS E-COMMERCE MULTI-PLATFORM\n")
+            f.write("MULTI-PLATFORM E-COMMERCE ANALYSIS REPORT\n")
             f.write("=" * 50 + "\n\n")
             
             if 'keywords' in data:
@@ -390,17 +393,17 @@ class MultiPlatformScraper:
             
             if 'combined_analysis' in data:
                 analysis = data['combined_analysis']
-                f.write("RINGKASAN ANALISIS:\n")
+                f.write("ANALYSIS SUMMARY:\n")
                 f.write("-" * 20 + "\n")
                 
                 if 'price_analysis' in analysis:
                     price = analysis['price_analysis']
-                    f.write(f"Rata-rata harga: Rp {price.get('average_price', 0):,.0f}\n")
-                    f.write(f"Harga terendah: Rp {price.get('min_price', 0):,.0f}\n")
-                    f.write(f"Harga tertinggi: Rp {price.get('max_price', 0):,.0f}\n\n")
+                    f.write(f"Average price: RM {price.get('average_price', 0):,.2f}\n")
+                    f.write(f"Lowest price: RM {price.get('min_price', 0):,.2f}\n")
+                    f.write(f"Highest price: RM {price.get('max_price', 0):,.2f}\n\n")
             
             if 'recommendations' in data:
-                f.write("REKOMENDASI:\n")
+                f.write("RECOMMENDATIONS:\n")
                 f.write("-" * 15 + "\n")
                 for rec in data['recommendations']:
                     f.write(f"• {rec}\n")
