@@ -5,6 +5,7 @@ from facebook_marketplace_scraper import FacebookMarketplaceScraper
 from advanced_analyzer import AdvancedAnalyzer
 from config import get_enabled_platforms, get_platform_config, get_config, MESSAGES
 from logger import get_logger, log_search_start, log_search_complete, log_search_error
+import os
 import time
 from typing import Dict, List, Any, Optional
 
@@ -350,46 +351,116 @@ class MultiPlatformScraper:
     def _export_json(self, data: Dict, filename: str) -> bool:
         """Export data to JSON format."""
         import json
-        with open(filename, 'w', encoding='utf-8') as f:
+        from config import OUTPUT_DIRS
+        
+        # Ensure exports directory exists
+        os.makedirs(OUTPUT_DIRS['exports'], exist_ok=True)
+        
+        # Prepend exports directory to filename
+        filepath = os.path.join(OUTPUT_DIRS['exports'], filename)
+        
+        with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2, default=str)
-        self.logger.info(f"Data exported to {filename}")
+        self.logger.info(f"Data exported to {filepath}")
         return True
     
     def _export_csv(self, data: Dict, filename: str) -> bool:
         """Export data to CSV format."""
         import pandas as pd
+        from config import OUTPUT_DIRS
+        
+        # Ensure exports directory exists
+        os.makedirs(OUTPUT_DIRS['exports'], exist_ok=True)
+        
+        # Prepend exports directory to filename
+        filepath = os.path.join(OUTPUT_DIRS['exports'], filename)
         
         # Flatten data for CSV export
         rows = []
+        keyword = data.get('keyword', 'search')
+        
+        # Handle two data structures:
+        # 1. Direct results: {'results': {platform: [products]}, 'keyword': str}
+        # 2. Nested results: {'results': {keyword: {platform: [products]}}}
         if 'results' in data:
-            for keyword, platforms in data['results'].items():
-                for platform, products in platforms.items():
-                    for product in products:
-                        row = {
-                            'keyword': keyword,
-                            'platform': platform,
-                            'name': product.get('name', ''),
-                            'price': product.get('price', 0),
-                            'rating': product.get('rating', 0),
-                            'sold': product.get('sold', 0),
-                            'url': product.get('url', '')
-                        }
-                        rows.append(row)
+            results = data['results']
+            
+            # Check if results is the direct platform->products structure
+            if results and isinstance(next(iter(results.values()), None), list):
+                # Direct structure: {platform: [products]}
+                for platform, products in results.items():
+                    if isinstance(products, list):
+                        for product in products:
+                            row = {
+                                'keyword': keyword,
+                                'platform': platform,
+                                'name': product.get('name', ''),
+                                'price': product.get('price', 0),
+                                'rating': product.get('rating', 0),
+                                'sold': product.get('sold', 0),
+                                'url': product.get('url', '')
+                            }
+                            rows.append(row)
+            else:
+                # Nested structure: {keyword: {platform: [products]}}
+                for kw, platforms in results.items():
+                    if isinstance(platforms, dict):
+                        for platform, products in platforms.items():
+                            if isinstance(products, list):
+                                for product in products:
+                                    row = {
+                                        'keyword': kw,
+                                        'platform': platform,
+                                        'name': product.get('name', ''),
+                                        'price': product.get('price', 0),
+                                        'rating': product.get('rating', 0),
+                                        'sold': product.get('sold', 0),
+                                        'url': product.get('url', '')
+                                    }
+                                    rows.append(row)
+        
+        if not rows:
+            self.logger.warning("No data to export to CSV")
+            return False
         
         df = pd.DataFrame(rows)
-        df.to_csv(filename, index=False, encoding='utf-8')
-        self.logger.info(f"Data exported to {filename}")
+        df.to_csv(filepath, index=False, encoding='utf-8')
+        self.logger.info(f"Data exported to {filepath}")
         return True
     
     def _export_txt(self, data: Dict, filename: str) -> bool:
         """Export data to human-readable text format."""
-        with open(filename, 'w', encoding='utf-8') as f:
+        from config import OUTPUT_DIRS
+        
+        # Ensure exports directory exists
+        os.makedirs(OUTPUT_DIRS['exports'], exist_ok=True)
+        
+        # Prepend exports directory to filename
+        filepath = os.path.join(OUTPUT_DIRS['exports'], filename)
+        
+        with open(filepath, 'w', encoding='utf-8') as f:
             f.write("MULTI-PLATFORM E-COMMERCE ANALYSIS REPORT\n")
             f.write("=" * 50 + "\n\n")
             
-            if 'keywords' in data:
+            # Handle keyword (singular or plural)
+            if 'keyword' in data:
+                f.write(f"Kata kunci: {data['keyword']}\n")
+            elif 'keywords' in data:
                 f.write(f"Kata kunci: {', '.join(data['keywords'])}\n")
+            
+            if 'timestamp' in data:
+                f.write(f"Timestamp: {data['timestamp']}\n")
+            
+            if 'platforms' in data:
                 f.write(f"Platform: {', '.join(data.get('platforms', []))}\n\n")
+            
+            # Summary section
+            if 'summary' in data:
+                summary = data['summary']
+                f.write("SUMMARY:\n")
+                f.write("-" * 20 + "\n")
+                f.write(f"Total platforms: {summary.get('total_platforms', 0)}\n")
+                f.write(f"Total products: {summary.get('total_products', 0)}\n\n")
             
             if 'combined_analysis' in data:
                 analysis = data['combined_analysis']
@@ -408,7 +479,7 @@ class MultiPlatformScraper:
                 for rec in data['recommendations']:
                     f.write(f"• {rec}\n")
         
-        self.logger.info(f"Data exported to {filename}")
+        self.logger.info(f"Data exported to {filepath}")
         return True
         baby_keywords = [
             'susu bayi', 'popok bayi', 'mainan bayi', 
@@ -486,12 +557,17 @@ class MultiPlatformScraper:
         import json
         import pandas as pd
         from datetime import datetime
+        from config import OUTPUT_DIRS
+        
+        # Ensure exports directory exists
+        os.makedirs(OUTPUT_DIRS['exports'], exist_ok=True)
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
         # Save combined JSON
         filename_json = f"{base_filename}_multiplatform_{timestamp}.json"
-        with open(filename_json, 'w', encoding='utf-8') as f:
+        filepath_json = os.path.join(OUTPUT_DIRS['exports'], filename_json)
+        with open(filepath_json, 'w', encoding='utf-8') as f:
             json.dump(results, f, ensure_ascii=False, indent=2, default=str)
         
         # Save platform-wise CSV files
@@ -500,8 +576,9 @@ class MultiPlatformScraper:
                 if isinstance(products, list) and products:
                     df = pd.DataFrame(products)
                     csv_filename = f"{base_filename}_{platform}_{timestamp}.csv"
-                    df.to_csv(csv_filename, index=False)
-                    self.logger.info(f"Saved {platform} data to {csv_filename}")
+                    csv_filepath = os.path.join(OUTPUT_DIRS['exports'], csv_filename)
+                    df.to_csv(csv_filepath, index=False)
+                    self.logger.info(f"Saved {platform} data to {csv_filepath}")
         
-        self.logger.info(f"Multi-platform results saved to {filename_json}")
-        return filename_json
+        self.logger.info(f"Multi-platform results saved to {filepath_json}")
+        return filepath_json

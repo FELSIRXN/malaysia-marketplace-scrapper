@@ -37,10 +37,12 @@ A comprehensive, production-ready scraper for Indonesian e-commerce platforms in
 
 ### Installation
 
+#### Option 1: Install as Package (Recommended)
+
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd neru-scrapper
+   cd malaysia-marketplace-scrapper-1
    ```
 
 2. **Create and activate virtual environment** (recommended)
@@ -53,6 +55,58 @@ A comprehensive, production-ready scraper for Indonesian e-commerce platforms in
    source venv/bin/activate
    # On Windows:
    # venv\Scripts\activate
+   ```
+
+3. **Install the package in editable mode**
+   ```bash
+   pip install -e .
+   ```
+
+   This will:
+   - Install all dependencies automatically
+   - Make the `malaysia-scraper` command available globally
+   - Allow you to modify the code and see changes immediately
+
+4. **Run the scraper**
+   ```bash
+   malaysia-scraper
+   ```
+   
+   Or use command-line arguments:
+   ```bash
+   malaysia-scraper --keyword "laptop" --limit 50
+   ```
+
+#### Option 2: Build and Install as Wheel
+
+1. **Install build tools**
+   ```bash
+   pip install build
+   ```
+
+2. **Build the package**
+   ```bash
+   python -m build
+   ```
+
+3. **Install the wheel**
+   ```bash
+   pip install dist/malaysia_marketplace_scraper-1.0.0-py3-none-any.whl
+   ```
+
+#### Option 3: Manual Installation (Development)
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd malaysia-marketplace-scrapper-1
+   ```
+
+2. **Create and activate virtual environment**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # macOS/Linux
+   # venv\Scripts\activate  # Windows
    ```
 
 3. **Upgrade pip and install build tools**
@@ -79,11 +133,54 @@ A comprehensive, production-ready scraper for Indonesian e-commerce platforms in
    python main.py
    ```
 
+## 🌐 Web Interface
+
+The scraper now includes a modern web interface! No terminal required.
+
+### Quick Start (Web Interface)
+
+1. **Install frontend dependencies**:
+   ```bash
+   cd frontend
+   npm install
+   cd ..
+   ```
+
+2. **Start the web interface**:
+   ```bash
+   python start_web.py
+   ```
+
+3. **Open your browser**:
+   - Frontend: http://localhost:3000
+   - API Docs: http://localhost:8000/docs
+
+### Web Interface Features
+
+- ✅ **Product Search** - Search across platforms with real-time progress
+- ✅ **Best Sellers** - Find top-selling affordable items
+- ✅ **Platform Comparison** - Compare prices and availability
+- ✅ **Interactive Charts** - Visualize price, rating, and sales data
+- ✅ **Export Results** - Download as CSV, JSON, or Excel
+- ✅ **Search History** - View and manage past searches
+- ✅ **Mobile Responsive** - Works on all devices
+
+For detailed web interface documentation, see [README_WEB.md](README_WEB.md)
+
 ## 📖 Usage
 
-### Interactive Mode
+### Using the Installed Command
+
+After installing the package with `pip install -e .`, you can use the `malaysia-scraper` command:
+
+#### Interactive Mode
 Launch the interactive CLI for guided product searches:
 
+```bash
+malaysia-scraper
+```
+
+Or if installed manually:
 ```bash
 python main.py
 ```
@@ -93,35 +190,59 @@ The interactive mode provides:
 - Search term input
 - Real-time progress tracking
 - Automatic analysis and export
+- Export to `exports/` directory
 
-### Command Line Arguments
+#### Command Line Arguments
 ```bash
-python main.py --keyword "laptop gaming" --limit 50 --platforms shopee tokopedia
+malaysia-scraper --keyword "laptop gaming" --limit 50 --platforms shopee,lazada
 ```
 
 **Available Arguments:**
-- `--keyword`: Search term (required)
-- `--limit`: Maximum results per platform (default: 50)
-- `--platforms`: Specific platforms to search (default: all enabled)
-- `--output`: Output format (json, csv, excel)
-- `--export-dir`: Custom export directory
+- `--keyword`, `-k`: Search term (required for non-interactive mode)
+- `--limit`, `-l`: Maximum results per platform (default: 100)
+- `--platforms`, `-p`: Comma-separated platform names (shopee, lazada, mudah)
+- `--export`, `-e`: Export format (json, csv, txt)
+- `--output`, `-o`: Custom output filename
+- `--interactive`, `-i`: Force interactive mode
+- `--max-price`: Maximum price filter in RM (default: 50)
+- `--sort-by`: Sort by sales, price, or rating (default: sales)
+- `--top-n`: Number of top items to return (default: 50)
+- `--bestsellers`, `-b`: Best seller analysis mode
+- `--version`, `-v`: Show version information
 
 ### Example Usage
 
-**Search for baby care products:**
+**Interactive mode:**
 ```bash
-python main.py --keyword "baby care" --limit 30
+malaysia-scraper --interactive
 ```
 
-**Compare laptop prices across platforms:**
+**Search for affordable USB cables:**
 ```bash
-python main.py --keyword "laptop" --platforms shopee tokopedia lazada --limit 100
+malaysia-scraper --keyword "USB-C Cable" --limit 30
 ```
+
+**Find best-selling items under RM 50:**
+```bash
+malaysia-scraper --keyword "electronics" --bestsellers --max-price 50 --top-n 20
+```
+
+**Compare laptop prices across platforms and export:**
+```bash
+malaysia-scraper --keyword "laptop" --platforms shopee,lazada,mudah --limit 100 --export csv
+```
+
+**Search specific platform only:**
+```bash
+malaysia-scraper --keyword "phone case" --platforms shopee --limit 50 --export json
+```
+
+All exported files are automatically saved to the `exports/` directory.
 
 ## 🏗️ Project Structure
 
 ```
-neru-scrapper/
+malaysia-marketplace-scrapper-1/
 ├── main.py                    # Entry point and CLI interface
 ├── multi_platform_scraper.py  # Core scraper orchestration
 ├── advanced_analyzer.py       # Analysis and intelligence engine
@@ -129,14 +250,21 @@ neru-scrapper/
 ├── logger.py                  # Professional logging system
 ├── base_scraper.py           # Base scraper class
 ├── shopee_scraper.py         # Shopee-specific implementation
-├── tokopedia_scraper.py      # Tokopedia-specific implementation
 ├── lazada_scraper.py         # Lazada-specific implementation
+├── mudah_scraper.py          # Mudah.my-specific implementation
+├── facebook_marketplace_scraper.py  # Facebook Marketplace implementation
+├── tokopedia_scraper.py      # Tokopedia-specific implementation
 ├── requirements.txt          # Python dependencies
+├── setup.py                  # Package installation configuration
+├── pyproject.toml            # Modern Python package metadata
+├── MANIFEST.in               # Package data file specification
+├── install.sh                # Linux/macOS installation script
+├── install.bat               # Windows installation script
 ├── data/                     # Raw scraped data
-├── exports/                  # Processed exports
-├── logs/                     # Application logs
-├── reports/                  # Analysis reports
-└── visualizations/           # Generated charts and graphs
+├── exports/                  # Processed exports (auto-created)
+├── logs/                     # Application logs (auto-created)
+├── reports/                  # Analysis reports (auto-created)
+└── venv/                     # Virtual environment (not included in package)
 ```
 
 ## ⚙️ Configuration
@@ -236,6 +364,36 @@ print(results['price_analysis'])
 
 ### Installation Issues
 
+**Package Installation Fails:**
+```bash
+# Solution 1: Install in editable mode with verbose output
+pip install -e . -v
+
+# Solution 2: Upgrade pip and setuptools first
+pip install --upgrade pip setuptools wheel
+pip install -e .
+
+# Solution 3: Install dependencies manually first
+pip install -r requirements.txt
+pip install -e .
+```
+
+**Command Not Found (malaysia-scraper):**
+```bash
+# Make sure you installed the package
+pip install -e .
+
+# Or reinstall
+pip uninstall malaysia-marketplace-scraper
+pip install -e .
+
+# Check if it's in your PATH
+which malaysia-scraper
+
+# If still not working, use python -m
+python -m main
+```
+
 **Metadata Generation Failed Error:**
 ```bash
 # Solution 1: Upgrade pip and build tools
@@ -269,6 +427,12 @@ pip install --upgrade pip setuptools wheel
 
 ### Runtime Issues
 
+**Export Not Working / Files Not Saving:**
+- Fixed in v1.0.0! All exports now automatically save to `exports/` directory
+- The directory is created automatically if it doesn't exist
+- Check `exports/` directory for your exported files
+- If you see "Export failed" errors, check the logs for details
+
 **Rate Limiting:**
 - Increase delay between requests in `config.py`
 - Reduce concurrent request count
@@ -276,13 +440,26 @@ pip install --upgrade pip setuptools wheel
 
 **Missing Dependencies:**
 ```bash
+# If installed as package
+pip install -e . --upgrade
+
+# If using requirements.txt
 pip install -r requirements.txt --upgrade
 ```
 
 **Permission Errors:**
 ```bash
 # Use --user flag if global installation fails
-pip install --user -r requirements.txt
+pip install --user -e .
+```
+
+**Module Import Errors:**
+```bash
+# Make sure you're in the correct directory
+cd /path/to/malaysia-marketplace-scrapper-1
+
+# Reinstall in editable mode
+pip install -e .
 ```
 
 ### Logging
@@ -307,6 +484,40 @@ tail -f logs/scraper.log
 - Add comprehensive docstrings
 - Include unit tests for new features
 - Update documentation as needed
+
+## 📦 Package Distribution
+
+### Building the Package
+
+To build a distributable package:
+
+```bash
+# Install build tools
+pip install build
+
+# Build the package
+python -m build
+
+# This creates:
+# - dist/malaysia_marketplace_scraper-1.0.0-py3-none-any.whl
+# - dist/malaysia-marketplace-scraper-1.0.0.tar.gz
+```
+
+### Installing from Built Package
+
+```bash
+# Install the wheel file
+pip install dist/malaysia_marketplace_scraper-1.0.0-py3-none-any.whl
+
+# Or install from source distribution
+pip install dist/malaysia-marketplace-scraper-1.0.0.tar.gz
+```
+
+### Uninstalling
+
+```bash
+pip uninstall malaysia-marketplace-scraper
+```
 
 ## 📄 License
 

@@ -1,0 +1,35 @@
+# Include documentation files
+include README.md
+include LICENSE
+
+# Include configuration files
+include requirements.txt
+include pyproject.toml
+
+# Include installation scripts
+include install.sh
+include install.bat
+
+# Exclude unnecessary files and directories
+exclude .gitignore
+exclude .cursorrules
+
+# Exclude virtual environment and build artifacts
+recursive-exclude venv *
+recursive-exclude __pycache__ *
+recursive-exclude *.py[co] *
+recursive-exclude build *
+recursive-exclude dist *
+recursive-exclude *.egg-info *
+
+# Exclude data directories (users will create their own)
+recursive-exclude data *
+recursive-exclude exports *
+recursive-exclude logs *
+recursive-exclude reports *
+recursive-exclude final_demo_output *
+
+# Exclude IDE and system files
+recursive-exclude .vscode *
+recursive-exclude .idea *
+recursive-exclude .DS_Store *
